@@ -275,16 +275,61 @@ class DbHandler {
 
         }
     }
-	
 
-	public function getStatusCuti($id_cuti){
-		$stmt = $this->conn->prepare("SELECT * FROM tr_transaksi WHERE id=?");
+    /**
+    * @param nip,email,Jenis_cuti,tglmulai,tgl_akhir,lamanya,alamat selama cuti,
+    *        keterangan,Atasan Langsung,list persyaratan        
+    */
+
+    public function createIzincuti($kode_layanan,$status,$nip,$nama,$telp,$email){
+        $response=array();
+        $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_layanan,status,nip,nama,telp,email,)  values (?,?,?,?,?,?) ");
+        $stmt->bind_param("iiisis", $kode_layanan,$status,$nip,$nama,$telp,$email);
+        $result = $stmt->execute();
+            $stmt->close();
+            // Check for successful insertion
+            if ($result) {
+                // User successfully inserted
+                $response["error"] = false;
+                $response["user"]  = $this->getUserByEmail($email);
+            } else {
+                // Failed to create user
+                $response["error"] = true;
+                $response["message"] = "Oops! An error occurred while registereing";
+            }
+            return $response;
+    }
+
+
+
+	/**
+    * Menampilkan cuti berdasarkan nip pegawai
+    * @param $nip
+    */
+
+	public function getStatusCuti($nip_pegawai){
+		$stmt = $this->conn->prepare("SELECT * FROM tr_transaksi WHERE nip=?");
         $stmt->bind_param("i", $id_cuti);
         $stmt->execute();
         $tasks = $stmt->get_result();
         $stmt->close();
+
         return $tasks;
 	}
+
+    /**
+    * menampilkan sisa cuti berdasarkan batasan max cuti
+    *@param $nip
+    */
+    public function getSisaCuti($nip){
+            $stmt = $this->conn->prepare("SELECT * FROM tr_transaksi WHERE nip=?");
+        $stmt->bind_param("i", $nip);
+        $stmt->execute();
+        $sisacuti = $stmt->get_result();
+        $stmt->close();
+        
+        return $sisacuti;
+    }
 
 }
 

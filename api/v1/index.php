@@ -26,7 +26,6 @@ $app->post('/user/login', function() use ($app) {
             // if ($db->checkLogin($email, $password)) {
                 // get the user by email
           $user = $db_s->getUsernPasswd($nip,$password);
-            
                 if ($user != NULL) {
                     $response["error"]    = false;
                     $response['id']       = $user['id'];
@@ -42,7 +41,10 @@ $app->post('/user/login', function() use ($app) {
             echoRespnse(200, $response);
 });
 
-
+/**
+* 
+* @param id cuti
+*/
 $app->get('/status_cuti/:id', function($id_cuti){
 	 global $app;
     $db = new DbHandler();
@@ -51,8 +53,7 @@ $app->get('/status_cuti/:id', function($id_cuti){
     $response['cuti'] = array();
      // looping through result and preparing tasks array
     while ($chat_room = $result->fetch_assoc()) {
-        // adding chat room node
-       
+        // adding chart status cuti
         if ($chat_room['id'] != NULL) {
             // message node
             $cmt = array();
@@ -62,11 +63,30 @@ $app->get('/status_cuti/:id', function($id_cuti){
             array_push($response["cuti"], $cmt);
         }
     }
-
     echoRespnse(200, $response);
 });
 
-  
+$app->get('/sisacuti/:id/', function($nip){
+     global $app;
+    $db = new DbHandler();
+    $result           = $db->getSisaCuti($nip);
+    $response['cuti'] = array();
+     // looping through result and preparing tasks array
+   
+        // adding chat room node
+        if ($chat_room['id'] != NULL) {
+           
+            $cmt = array();
+            $cmt["nip"] = $chat_room["kode_usulan"];
+            $cmt["nama"]        = $chat_room["nama"];
+            $cmt["status"]      = $chat_room["status"];
+            array_push($response["cuti"], $cmt);
+        }
+    }
+
+    echoRespnse(200, $response);
+});
+ 
 
 /**
  * Verifying required params posted or not
