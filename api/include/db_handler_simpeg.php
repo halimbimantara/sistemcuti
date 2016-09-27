@@ -35,7 +35,7 @@ class DbHandlerSimpeg {
             $response["error"] = false;
             $users["uid"]      = $id;
             $users["name"]     = $name;
-            $users["nip"]     = $nip;
+            $users["nip"]      = $nip;
             $response["user"]  = $users;
             $stmt->close();
 

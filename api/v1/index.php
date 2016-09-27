@@ -14,14 +14,11 @@ $app = new \Slim\Slim();
 $app->post('/user/login', function() use ($app) {
     // check for required params
     verifyRequiredParams(array('name', 'email'));
-
     // reading post params
     $name =  $app->request->post('name');
     $email = $app->request->post('email');
-
     // validating email address
     validateEmail($email);
-
     $db = new DbHandlerSimpeg();
     $response = $db->getUsernPasswd($name, $email);
     // echo json response
