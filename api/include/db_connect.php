@@ -21,7 +21,7 @@ class DbConnect {
         include_once dirname(__FILE__) . '/config.php';
 
         // Connecting to mysql database
-        $this->conn = new PDO('mysql:dbname='.$dbName.';host='.$host, $user, $pwd);
+        $this->conn = new mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
         // Check for database connection error
         if (mysqli_connect_errno()) {
             echo "Failed to connect to MySQL: " . mysqli_connect_error();
@@ -35,7 +35,7 @@ class DbConnect {
 		include_once dirname(__FILE__) . '/config_simpeg.php';
 
         // Connecting to mysql database
-        $this->conn_simpeg = new PDO('mysql:dbname='.$dbName.';host='.$host, $user, $pwd);
+     $this->conn_simpeg = new mysqli(DB_HOST_SI, DB_USERNAME_SI, DB_PASSWORD_SI, DB_NAME_SI);
         // Check for database connection error
         if (mysqli_connect_errno()) {
             echo "Failed to connect to MySQL: " . mysqli_connect_error();

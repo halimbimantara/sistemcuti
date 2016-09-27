@@ -3,6 +3,7 @@
 error_reporting(-1);
 ini_set('display_errors', 'On');
 
+require_once '../include/db_handler_simpeg.php';
 require_once '../include/db_handler.php';
 require '.././libs/Slim/Slim.php';
 
@@ -13,60 +14,59 @@ $app = new \Slim\Slim();
 // User login
 $app->post('/user/login', function() use ($app) {
     // check for required params
-    verifyRequiredParams(array('name', 'email'));
-    // reading post params
-    $name =  $app->request->post('name');
-    $email = $app->request->post('email');
-    // validating email address
-    validateEmail($email);
-    $db = new DbHandlerSimpeg();
-    $response = $db->getUsernPasswd($name, $email);
-    // echo json response
-    echoRespnse(200, $response);
+    verifyRequiredParams(array('nip', 'password'));
+
+     // reading post params
+    $nip     = $app->request->post('nip');
+    $password = $app->request->post('password');
+
+          $db_s = new DbHandlerSimpeg();
+          $response = array();
+            // check for correct email and password
+            // if ($db->checkLogin($email, $password)) {
+                // get the user by email
+          $user = $db_s->getUsernPasswd($nip,$password);
+            
+                if ($user != NULL) {
+                    $response["error"]    = false;
+                    $response['id']       = $user['id'];
+                    $response['username'] = $user['username'];
+                    $response['nip']      = $user['nip'];
+                    $response['token']    = $user['token'];
+                } else {
+                    // unknown error occurred
+                    $response['error']   = true;
+                    $response['message'] = "An error occurred. Please try again";
+                }
+ 
+            echoRespnse(200, $response);
 });
+
 
 $app->get('/status_cuti/:id', function($id_cuti){
 	 global $app;
     $db = new DbHandler();
-
     $result = $db->getStatusCuti($id_cuti);
-
     $response["error"] = false;
-    $response["messages"] = array();
     $response['cuti'] = array();
-    $i = 0;
      // looping through result and preparing tasks array
     while ($chat_room = $result->fetch_assoc()) {
         // adding chat room node
-        if ($i == 0) {
-            $tmp = array();
-            $tmp["chat_room_id"]   = $chat_room["chat_room_id"];
-            $tmp["name"]           = $chat_room["name"];
-            $tmp["created_at"]     = $chat_room["chat_room_created_at"];
-            $response['chat_room'] = $tmp;
-        }
-
-        if ($chat_room['user_id'] != NULL) {
+       
+        if ($chat_room['id'] != NULL) {
             // message node
             $cmt = array();
-            $cmt["message"] = $chat_room["message"];
-            $cmt["message_id"] = $chat_room["message_id"];
-            $cmt["created_at"] = $chat_room["created_at"];
-
-            // user node
-            $user = array();
-            $user['user_id'] = $chat_room['user_id'];
-            $user['username'] = $chat_room['username'];
-            $cmt['user'] = $user;
-
-            array_push($response["messages"], $cmt);
+            $cmt["kode_usulan"] = $chat_room["kode_usulan"];
+            $cmt["nama"]        = $chat_room["nama"];
+            $cmt["status"]      = $chat_room["status"];
+            array_push($response["cuti"], $cmt);
         }
     }
 
     echoRespnse(200, $response);
 });
 
-
+  
 
 /**
  * Verifying required params posted or not

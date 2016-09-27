@@ -9,13 +9,13 @@
  */
 class DbHandlerSimpeg {
 
-	private $conn_simpeg;
+	private $conn;
 
     function __construct() {
         require_once dirname(__FILE__) . '/db_connect.php';
         // opening db connection
 		$db = new DbConnect();
-        $this->conn_simpeg = $db->connect_simpeg();
+        $this->conn = $db->connect_simpeg();
     }
    
     /**
@@ -23,27 +23,19 @@ class DbHandlerSimpeg {
     * @param Sring username password
     */
     public function getUsernPasswd($uname,$password){       
-        $response=array();
-        $stmt =$this->conn_simpeg->prepare("SELECT id,username,nip FROM api_andro_notif WHERE  username= ? AND password= ? ");
-        $stmt->bind_param("ss",$uname,$password);
+       
+        $stmt = $this->conn->prepare("SELECT id,username,nip,token FROM user 
+                                      WHERE `nip`= ? 
+                                      AND `password_hash`= ? ");
+        $stmt->bind_param("is",$uname,$password);
 
-        if ($stmt->execute()){
-            $stmt->bind_result($id,$name,$nip);  
-            $stmt->fetch();  
-
-            $users = array();
-            $response["error"] = false;
-            $users["uid"]      = $id;
-            $users["name"]     = $name;
-            $users["nip"]      = $nip;
-            $response["user"]  = $users;
+        if ($stmt->execute()) {
+            $user = $stmt->get_result()->fetch_assoc();
             $stmt->close();
-
-        }else{
-            $response["error"] = true;
-            $response['message'] = 'Failed To Login'. $stmt->error;
+            return $user;
+        } else {
+            return $stmt->error;
         }
-        return $response;
     }
 
     /**
@@ -78,5 +70,5 @@ class DbHandlerSimpeg {
         }
     }
 		
-
+}
 ?>

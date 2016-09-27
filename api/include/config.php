@@ -5,7 +5,7 @@
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_HOST', 'localhost');
-define('DB_NAME', '');
+define('DB_NAME', 'mendagrilayanan');
 
 define("GOOGLE_API_KEY", "AIzaSyDKk_ew7Vi4FZnMzu6GCY5nLb4xZG8muvI");
 

@@ -10,7 +10,6 @@
 class DbHandler {
 
     private $conn;
-	private $conn_simpeg;
 
     function __construct() {
         require_once dirname(__FILE__) . '/db_connect.php';
@@ -18,8 +17,7 @@ class DbHandler {
         $db = new DbConnect();
         $this->conn = $db->connect();
 		
-		$db_simpeg = new DbConnect();
-        $this->conn_simpeg = $db_simpeg->connect_simpeg();
+		
     }
 
     // creating new user if not existed
@@ -278,12 +276,9 @@ class DbHandler {
         }
     }
 	
-	
-	public function Login_simpeg(){
-		
-	}
+
 	public function getStatusCuti($id_cuti){
-		 $stmt = $this->conn->prepare("SELECT id,nip,jenis_cuti FROM ");
+		$stmt = $this->conn->prepare("SELECT * FROM tr_transaksi WHERE id=?");
         $stmt->bind_param("i", $id_cuti);
         $stmt->execute();
         $tasks = $stmt->get_result();

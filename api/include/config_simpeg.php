@@ -2,10 +2,10 @@
 /**
  * Database configuration
  */
-define('DB_USERNAME', 'root');
-define('DB_PASSWORD', '');
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'loginsimpeg');
+define('DB_USERNAME_SI', 'root');
+define('DB_PASSWORD_SI', '');
+define('DB_HOST_SI', 'localhost');
+define('DB_NAME_SI', 'loginsimpeg');
 
 
 ?>
