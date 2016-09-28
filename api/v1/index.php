@@ -16,15 +16,13 @@ $app->post('/user/login', function() use ($app) {
     // check for required params
     verifyRequiredParams(array('nip', 'password'));
 
-     // reading post params
-    $nip     = $app->request->post('nip');
+    // reading post params
+    $nip      = $app->request->post('nip');
     $password = $app->request->post('password');
 
           $db_s = new DbHandlerSimpeg();
-          $response = array();
-            // check for correct email and password
-            // if ($db->checkLogin($email, $password)) {
-                // get the user by email
+          $response = array();           
+       // get the user by nip
           $user = $db_s->getUsernPasswd($nip,$password);
                 if ($user != NULL) {
                     $response["error"]    = false;
@@ -37,7 +35,6 @@ $app->post('/user/login', function() use ($app) {
                     $response['error']   = true;
                     $response['message'] = "An error occurred. Please try again";
                 }
- 
             echoRespnse(200, $response);
 });
 
@@ -46,7 +43,7 @@ $app->post('/user/login', function() use ($app) {
 * @param id cuti
 */
 $app->get('/status_cuti/:id', function($id_cuti){
-	 global $app;
+     global $app;
     $db = new DbHandler();
     $result = $db->getStatusCuti($id_cuti);
     $response["error"] = false;
@@ -66,17 +63,22 @@ $app->get('/status_cuti/:id', function($id_cuti){
     echoRespnse(200, $response);
 });
 
-$app->get('/sisacuti/:id/', function($nip){
+$app->get('/sisacuti/:id/', function() use ($app){
      global $app;
     $db = new DbHandler();
     $result           = $db->getSisaCuti($nip);
     $response['cuti'] = array();
-     // looping through result and preparing tasks array
-   
-       
-    echoRespnse(200, $response);
+    echo "Hello".$nip;
 });
- 
+
+/**
+*
+*
+*/
+
+$app->post('/createcuti/',function($app)
+
+}); 
 
 /**
  * Verifying required params posted or not

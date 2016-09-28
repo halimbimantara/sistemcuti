@@ -284,14 +284,14 @@ class DbHandler {
     public function createIzincuti($kode_layanan,$status,$nip,$nama,$telp,$email){
         $response=array();
         $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_layanan,status,nip,nama,telp,email,)  values (?,?,?,?,?,?) ");
-        $stmt->bind_param("iiisis", $kode_layanan,$status,$nip,$nama,$telp,$email);
+        $stmt->bind_param("sissis", $kode_layanan,$status,$nip,$nama,$telp,$email);
         $result = $stmt->execute();
             $stmt->close();
             // Check for successful insertion
             if ($result) {
                 // User successfully inserted
                 $response["error"] = false;
-                $response["user"]  = $this->getUserByEmail($email);
+                $response["nip"]   = $nip;
             } else {
                 // Failed to create user
                 $response["error"] = true;
@@ -308,8 +308,9 @@ class DbHandler {
     */
 
 	public function getStatusCuti($nip_pegawai){
-		$stmt = $this->conn->prepare("SELECT * FROM tr_transaksi WHERE nip=?");
-        $stmt->bind_param("i", $id_cuti);
+		$stmt = $this->conn->prepare("SELECT id,kode_usulan,nama,status 
+                                      FROM tr_transaksi WHERE id=?");
+        $stmt->bind_param("i", $nip_pegawai);
         $stmt->execute();
         $tasks = $stmt->get_result();
         $stmt->close();
