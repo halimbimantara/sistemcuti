@@ -73,17 +73,7 @@ $app->get('/sisacuti/:id/', function($nip){
     $response['cuti'] = array();
      // looping through result and preparing tasks array
    
-        // adding chat room node
-        if ($chat_room['id'] != NULL) {
-           
-            $cmt = array();
-            $cmt["nip"] = $chat_room["kode_usulan"];
-            $cmt["nama"]        = $chat_room["nama"];
-            $cmt["status"]      = $chat_room["status"];
-            array_push($response["cuti"], $cmt);
-        }
-    }
-
+       
     echoRespnse(200, $response);
 });
  

@@ -23,13 +23,15 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(50) DEFAULT NULL,
-  `password` varchar(100) DEFAULT NULL,
+  `password_hash` varchar(100) DEFAULT NULL,
   `token` varchar(200) DEFAULT NULL,
   `nip` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 /*Data for the table `user` */
+
+insert  into `user`(`id`,`username`,`password_hash`,`token`,`nip`) values (1,'halim','okebos','adasds23132','11010045');
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
