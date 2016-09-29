@@ -28,7 +28,6 @@ class DbHandlerSimpeg {
                                       WHERE `nip`= ? 
                                       AND `password_hash`= ? ");
         $stmt->bind_param("is",$uname,$password);
-
         if ($stmt->execute()) {
             $user = $stmt->get_result()->fetch_assoc();
             $stmt->close();

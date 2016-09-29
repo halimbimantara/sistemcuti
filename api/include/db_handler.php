@@ -136,7 +136,6 @@ class DbHandler {
 
         if ($result = $stmt->execute()) {
             $response['error'] = false;
-
             // get the message
             $message_id = $this->conn->insert_id;
             $stmt = $this->conn->prepare("SELECT message_id, user_id, chat_room_id, message, created_at FROM messages WHERE message_id = ?");
@@ -252,11 +251,11 @@ class DbHandler {
     public function saveToken($uid,$name,$token){
     $response=array();
     $stmt =$this->conn->prepare("SELECT key FROM users WHERE  user_id= ? AND name= ? ");
-        $stmt->bind_param("is",$uid,$name);
+    $stmt->bind_param("is",$uid,$name);
     if($stmt->execute()){
             //berhasil cocok
-        $stmtinsert = $this->conn->prepare("UPDATE users SET key = ? WHERE user_id = ?");
-        $stmtinsert->bind_param("si", $token, $uid);
+    $stmtinsert = $this->conn->prepare("UPDATE users SET key = ? WHERE user_id = ?");
+    $stmtinsert->bind_param("si", $token, $uid);
 
         if ($stmtinsert->execute()) {
             // User successfully updated
@@ -281,41 +280,109 @@ class DbHandler {
     *        keterangan,Atasan Langsung,list persyaratan        
     */
 
-    public function createIzincuti($kode_layanan,$status,$nip,$nama,$telp,$email){
+    public function createIzincuti($nip,$nama,$telp,$email,$id_user){
         $response=array();
-        $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_layanan,status,nip,nama,telp,email,)  values (?,?,?,?,?,?) ");
-        $stmt->bind_param("sissis", $kode_layanan,$status,$nip,$nama,$telp,$email);
-        $result = $stmt->execute();
-            $stmt->close();
+        $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_usulan,kode_layanan,status,nip,nama,telp,email,waktu_usulan,id_user_usul)  values (?,?,?,?,?,?,?,?,?) ");
+        $kode_usulan=$this->generateKodeUsulan();
+        $kode_layanan="17";
+        $waktu_usulan=date('Y-m-d H:i:s');
+
+    $stmt->bind_param("ssisssssi",$kode_usulan,$kode_layanan,$status,$nip,
+    $nama,$telp,$email,$waktu_usulan,$id_user);
+    $result = $stmt->execute();
+    $stmt->close();
             // Check for successful insertion
             if ($result) {
                 // User successfully inserted
-                $response["error"] = false;
-                $response["nip"]   = $nip;
+                $response["status"]  = true;
+                $response["message"] = "Data Berhasil Ditambahkan";
+                $response["nip"]     = $nip;
             } else {
                 // Failed to create user
-                $response["error"] = true;
+                $response["status"]   = false;
                 $response["message"] = "Oops! An error occurred while registereing";
             }
             return $response;
     }
 
+    private function generateKodeUsulan(){
+       $count=$this->cekLastKode();
+        if ($count == 0) {
+            $genkey  ="0001";    
+        }else{
+             $genkey=$this->cekLastKode();
+        }
+        $kode_usulan ="17".$genkey.date('m').date('Y');
+        return $kode_usulan;
+    }
 
+    public function cekLastKode(){
+        $query="SELECT MAX(MID(kode_usulan,3,4)) AS code
+                            FROM tr_transaksi 
+                            WHERE MID(kode_usulan,1,2)='17'
+                            AND MID(kode_usulan,7,2)='".date('m')."' 
+                            AND MID(kode_usulan,9,4)='".date('Y')."' ";
+        $stmt=$this->conn->prepare($query);
+        $stmt->execute();
+        $stmt->bind_result($code);  
+        $stmt->fetch();  
+        //hasil masih utuh belum dipecah
+        $h_usulan = $code; 
+        $result = $this->GenerateNoUsulan($h_usulan);
+        return $result;
+    }
+
+    private function GenerateNoUsulan($kode){
+        $no_nota='';
+        $no_nota=$kode+1;
+        switch (strlen($no_nota)) {
+            case 1:$no_nota='000'.$no_nota;
+                break;
+            case 2:$no_nota='00'.$no_nota;
+                break;
+            case 3:$no_nota='0'.$no_nota;
+                break;
+            case 4:$no_nota=$no_nota;
+                break;
+            default:
+                # code...
+                break;
+        }
+        return $no_nota;
+    }
 
 	/**
     * Menampilkan cuti berdasarkan nip pegawai
     * @param $nip
     */
-
 	public function getStatusCuti($nip_pegawai){
-		$stmt = $this->conn->prepare("SELECT id,kode_usulan,nama,status 
-                                      FROM tr_transaksi WHERE id=?");
-        $stmt->bind_param("i", $nip_pegawai);
+		$response = array(); 
+        $stmt = $this->conn->prepare("SELECT id,kode_usulan,nama,status 
+                                      FROM tr_transaksi WHERE kode_layanan=?");
+        $stmt->bind_param("s", $nip_pegawai);
         $stmt->execute();
         $tasks = $stmt->get_result();
         $stmt->close();
+        $res=$tasks->num_rows;
+    
+    if(!empty($res)){ 
+        $response["status"]  = true;
+        $response["message"] = "Data Berhasil Di Load";         
+        $response['data']    = array();
+        while ($chat_room=$tasks->fetch_assoc())
+            {
+                $cmt = array();
+                $cmt["kode_usulan"]  = $chat_room["kode_usulan"];
+                $cmt["nama"]         = $chat_room["nama"];
+                $cmt["status_cuti"]  = $chat_room["status"];
+                array_push($response["data"], $cmt);
+            }
 
-        return $tasks;
+        }else{
+            $response["status"]  = false;
+            $response["message"] = "Tidak Ada Data";
+        }
+        return $response ;
 	}
 
     /**

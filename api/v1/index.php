@@ -12,27 +12,25 @@ require '.././libs/Slim/Slim.php';
 $app = new \Slim\Slim();
 
 // User login
-$app->post('/user/login', function() use ($app) {
+$app->post('/user/login/:nip/:password', function($nip,$password) use ($app) {
     // check for required params
     verifyRequiredParams(array('nip', 'password'));
-
-    // reading post params
-    $nip      = $app->request->post('nip');
-    $password = $app->request->post('password');
 
           $db_s = new DbHandlerSimpeg();
           $response = array();           
        // get the user by nip
           $user = $db_s->getUsernPasswd($nip,$password);
                 if ($user != NULL) {
-                    $response["error"]    = false;
+                    $response["status"]    = false;
+                    $response["message"]  ="Login Berhasil";
+
                     $response['id']       = $user['id'];
-                    $response['username'] = $user['username'];
+                    $response['namapeg'] = $user['username'];
                     $response['nip']      = $user['nip'];
                     $response['token']    = $user['token'];
                 } else {
                     // unknown error occurred
-                    $response['error']   = true;
+                    $response['status']   = true;
                     $response['message'] = "An error occurred. Please try again";
                 }
             echoRespnse(200, $response);
@@ -43,24 +41,10 @@ $app->post('/user/login', function() use ($app) {
 * @param id cuti
 */
 $app->get('/status_cuti/:id', function($id_cuti){
-     global $app;
-    $db = new DbHandler();
-    $result = $db->getStatusCuti($id_cuti);
-    $response["error"] = false;
-    $response['cuti'] = array();
-     // looping through result and preparing tasks array
-    while ($chat_room = $result->fetch_assoc()) {
-        // adding chart status cuti
-        if ($chat_room['id'] != NULL) {
-            // message node
-            $cmt = array();
-            $cmt["kode_usulan"] = $chat_room["kode_usulan"];
-            $cmt["nama"]        = $chat_room["nama"];
-            $cmt["status"]      = $chat_room["status"];
-            array_push($response["cuti"], $cmt);
-        }
-    }
-    echoRespnse(200, $response);
+global $app;
+$db = new DbHandler();
+$result = $db->getStatusCuti($id_cuti);
+    echoRespnse(200, $result);
 });
 
 $app->get('/sisacuti/:id/', function() use ($app){
@@ -71,14 +55,33 @@ $app->get('/sisacuti/:id/', function() use ($app){
     echo "Hello".$nip;
 });
 
+$app->get('/cekusulan/:id/', function($nip){
+    global $app;
+    $db        = new DbHandler();
+    $result    = $db->cekLastKode();
+    echo $result;
+});
+
 /**
 *
 *
 */
+$app->post('/createcuti', function() use ($app) {
 
-$app->post('/createcuti/',function($app)
+    $id_user   = $app->request->post('id');  
+    $nama      = $app->request->post('nama');
+    $nip       = $app->request->post('nip');
+    $telp      = $app->request->post('telp');  
+    $email     = $app->request->post('email');
+    
+    
+    $db =new DbHandler();
+    $response = $db->createIzincuti($nip,$nama,$telp,$email,$id_user);
+    // echo json response
+    echoRespnse(200, $response); 
+});    
 
-}); 
+
 
 /**
  * Verifying required params posted or not
