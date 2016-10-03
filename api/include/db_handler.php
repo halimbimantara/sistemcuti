@@ -29,11 +29,8 @@ class DbHandler {
             // insert query
             $stmt = $this->conn->prepare("INSERT INTO users(name, email) values(?, ?)");
             $stmt->bind_param("ss", $name, $email);
-
             $result = $stmt->execute();
-
             $stmt->close();
-
             // Check for successful insertion
             if ($result) {
                 // User successfully inserted
@@ -280,20 +277,31 @@ class DbHandler {
     *        keterangan,Atasan Langsung,list persyaratan        
     */
 
-    public function createIzincuti($nip,$nama,$telp,$email,$id_user){
-        $response=array();
-        $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_usulan,kode_layanan,status,nip,nama,telp,email,waktu_usulan,id_user_usul)  values (?,?,?,?,?,?,?,?,?) ");
+    public function createIzincuti($nip,$nama,$telp,$email,$ket,$atasan_nama,$nip_atasan,$tmulai,$takhir,$jenis_cuti,$id_user){
+    $response=array();
+    $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_usulan,kode_layanan,status,nip,nama,telp,email,waktu_usulan,ket,atas_nama,atas_nip,id_user_usul)  values (?,?,?,?,?,?,?,?,?,?,?,?) ");
         $kode_usulan=$this->generateKodeUsulan();
         $kode_layanan="17";
         $waktu_usulan=date('Y-m-d H:i:s');
-
-    $stmt->bind_param("ssisssssi",$kode_usulan,$kode_layanan,$status,$nip,
-    $nama,$telp,$email,$waktu_usulan,$id_user);
+        $status=1;
+$stmt->bind_param("ssissssssssi",$kode_usulan,$kode_layanan,$status,$nip,$nama,$telp,$email,$waktu_usulan,$ket,$atasan_nama,$nip_atasan,$id_user);
     $result = $stmt->execute();
     $stmt->close();
             // Check for successful insertion
-            if ($result) {
-                // User successfully inserted
+    if ($result) {
+               //User successfully inserted
+               //insert into tr detail 
+               $stmts=$this->conn->prepare("INSERT INTO tr_detail_cuti (kode_usulan,tahun,nip,jenis_cuti,jum_hari,sisa_cuti,tmulai,takhir,keterangan,alamat,tgl_pengajuan,nip_atasan,nama_atasan,jabatan_atasan) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+      $tahun_usulan=date('Y');
+      $jum_hari=1;
+      $sisacuti=2;
+      $alamat="ss";
+
+      $stmts->bind_param("sisiiissssssss",$kode_usulan,$tahun_usulan,$nip,$jenis_cuti,
+                $jum_hari,$sisacuti,$tmulai,$takhir,$ket,$alamat,$waktu_usulan,
+                $nip_atasan,$nama_atasan,$jabatan_atasan);
+      $result = $stmts->execute();
+      $stmts->close();
                 $response["status"]  = true;
                 $response["message"] = "Data Berhasil Ditambahkan";
                 $response["nip"]     = $nip;
@@ -355,10 +363,12 @@ class DbHandler {
     * Menampilkan cuti berdasarkan nip pegawai
     * @param $nip
     */
-	public function getStatusCuti($nip_pegawai){
-		$response = array(); 
-        $stmt = $this->conn->prepare("SELECT id,kode_usulan,nama,status 
-                                      FROM tr_transaksi WHERE kode_layanan=?");
+	 public function getStatusCuti($nip_pegawai){
+        $response = array(); 
+        $stmt = $this->conn->prepare("SELECT trx.kode_usulan,trx.nama,trx.waktu_usulan,ct.tmulai,ct.takhir,jc.ncuti jeniscuti,trx.atas_nama,trx.status FROM tr_transaksi trx
+            JOIN tr_detail_cuti ct ON ct.kode_usulan=trx.kode_usulan
+            JOIN ref_jenis_cuti jc ON jc.kcuti=ct.jenis_cuti
+            WHERE trx.nip=?");
         $stmt->bind_param("s", $nip_pegawai);
         $stmt->execute();
         $tasks = $stmt->get_result();
@@ -373,7 +383,11 @@ class DbHandler {
             {
                 $cmt = array();
                 $cmt["kode_usulan"]  = $chat_room["kode_usulan"];
-                $cmt["nama"]         = $chat_room["nama"];
+                $cmt["nama"]  = $chat_room["nama"];
+                $cmt["waktu_usulan"] = $chat_room["waktu_usulan"];
+                $cmt["tmulai"]       = $chat_room["tmulai"];
+                $cmt["takhir"]       = $chat_room["takhir"];
+                $cmt["jcuti"]       = $chat_room["jeniscuti"];
                 $cmt["status_cuti"]  = $chat_room["status"];
                 array_push($response["data"], $cmt);
             }
@@ -383,7 +397,7 @@ class DbHandler {
             $response["message"] = "Tidak Ada Data";
         }
         return $response ;
-	}
+    }
 
     /**
     * menampilkan sisa cuti berdasarkan batasan max cuti

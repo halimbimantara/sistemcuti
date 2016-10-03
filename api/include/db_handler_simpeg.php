@@ -27,7 +27,7 @@ class DbHandlerSimpeg {
         $stmt = $this->conn->prepare("SELECT id,username,nip,token FROM user 
                                       WHERE `nip`= ? 
                                       AND `password_hash`= ? ");
-        $stmt->bind_param("is",$uname,$password);
+        $stmt->bind_param("ss",$uname,$password);
         if ($stmt->execute()) {
             $user = $stmt->get_result()->fetch_assoc();
             $stmt->close();

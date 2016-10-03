@@ -12,10 +12,9 @@ require '.././libs/Slim/Slim.php';
 $app = new \Slim\Slim();
 
 // User login
-$app->post('/user/login/:nip/:password', function($nip,$password) use ($app) {
+$app->get('/user/login/:nip/:password', function($nip,$password) use ($app) {
     // check for required params
-    verifyRequiredParams(array('nip', 'password'));
-
+    // verifyRequiredParams(array('nip', 'password'));
           $db_s = new DbHandlerSimpeg();
           $response = array();           
        // get the user by nip
@@ -73,10 +72,19 @@ $app->post('/createcuti', function() use ($app) {
     $nip       = $app->request->post('nip');
     $telp      = $app->request->post('telp');  
     $email     = $app->request->post('email');
+
+
+    $nip_atasan     = $app->request->post('nip_atasan');
+    $atasan_nama    = $app->request->post('nama_atasan');
+    $jabatan_atasan = $app->request->post('jabatan');
+    $keterangan     = $app->request->post('keterangan');
+    $tmulai         = $app->request->post('tmulai');
+    $takhir         = $app->request->post('takhir');
+    $jeniscuti      = $app->request->post('jcuti');
     
-    
-    $db =new DbHandler();
-    $response = $db->createIzincuti($nip,$nama,$telp,$email,$id_user);
+    $db = new DbHandler();
+    $response = $db->createIzincuti($nip,$nama,$telp,$email,$keterangan,$atasan_nama,
+        $nip_atasan,$tmulai,$takhir,$jeniscuti,$id_user);
     // echo json response
     echoRespnse(200, $response); 
 });    
@@ -141,10 +149,8 @@ function echoRespnse($status_code, $response) {
     $app = \Slim\Slim::getInstance();
     // Http response code
     $app->status($status_code);
-
     // setting response content type to json
     $app->contentType('application/json');
-
     echo json_encode($response);
 }
 $app->run();
