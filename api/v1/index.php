@@ -23,10 +23,10 @@ $app->get('/user/login/:nip/:password', function($nip,$password) use ($app) {
                     $response["status"]    = false;
                     $response["message"]  ="Login Berhasil";
 
-                    $response['id']       = $user['id'];
-                    $response['namapeg'] = $user['username'];
+                    $response['id']       = $user['id_user'];
+                    $response['namapeg']  = $user['nama'];
                     $response['nip']      = $user['nip'];
-                    $response['token']    = $user['token'];
+                    $response['photo']    = $user['photo'];
                 } else {
                     // unknown error occurred
                     $response['status']   = true;
@@ -46,7 +46,7 @@ $result = $db->getStatusCuti($id_cuti);
     echoRespnse(200, $result);
 });
 
-$app->get('/sisacuti/:id/', function() use ($app){
+$app->get('/sisacuti/:id/', function($nip) use ($app){
      global $app;
     $db = new DbHandler();
     $result           = $db->getSisaCuti($nip);
@@ -54,25 +54,35 @@ $app->get('/sisacuti/:id/', function() use ($app){
     echo "Hello".$nip;
 });
 
-$app->get('/cekusulan/:id/', function($nip){
-    global $app;
-    $db        = new DbHandler();
-    $result    = $db->cekLastKode();
-    echo $result;
+$app->get('/biodata/:nip/', function($nip) use ($app){
+     global $app;
+    $db = new DbHandlerSimpeg();
+    $result   = $db->getBiodata($nip);
+    echoRespnse(200, $result);
+});
+
+$app->get('/nipatasan', function() use ($app){
+     global $app;
+    $db = new DbHandlerSimpeg();
+    $result   = $db->getNipAtasan();
+    echoRespnse(200, $result);
 });
 
 /**
-*
 *
 */
 $app->post('/createcuti', function() use ($app) {
 
     $id_user   = $app->request->post('id');  
     $nama      = $app->request->post('nama');
+
+    $jbtan     = $app->request->post('jbtan');
+    $pangkat   = $app->request->post('pangkat');
+    $unitkerja = $app->request->post('unitkerja');
+
     $nip       = $app->request->post('nip');
     $telp      = $app->request->post('telp');  
     $email     = $app->request->post('email');
-
 
     $nip_atasan     = $app->request->post('nip_atasan');
     $atasan_nama    = $app->request->post('nama_atasan');
@@ -83,8 +93,7 @@ $app->post('/createcuti', function() use ($app) {
     $jeniscuti      = $app->request->post('jcuti');
     
     $db = new DbHandler();
-    $response = $db->createIzincuti($nip,$nama,$telp,$email,$keterangan,$atasan_nama,
-        $nip_atasan,$tmulai,$takhir,$jeniscuti,$id_user);
+    $response = $db->createIzincuti($nip,$nama,$jbtan,$pangkat,$unitkerja,$telp,$email,$keterangan,$atasan_nama,$nip_atasan,$tmulai,$takhir,$jeniscuti,$id_user);
     // echo json response
     echoRespnse(200, $response); 
 });    

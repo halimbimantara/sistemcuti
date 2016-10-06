@@ -20,227 +20,6 @@ class DbHandler {
 		
     }
 
-    // creating new user if not existed
-    public function createUser($name, $email) {
-        $response = array();
-
-        // First check if user already existed in db
-        if (!$this->isUserExists($email)) {
-            // insert query
-            $stmt = $this->conn->prepare("INSERT INTO users(name, email) values(?, ?)");
-            $stmt->bind_param("ss", $name, $email);
-            $result = $stmt->execute();
-            $stmt->close();
-            // Check for successful insertion
-            if ($result) {
-                // User successfully inserted
-                $response["error"] = false;
-                $response["user"] = $this->getUserByEmail($email);
-            } else {
-                // Failed to create user
-                $response["error"] = true;
-                $response["message"] = "Oops! An error occurred while registereing";
-            }
-        } else {
-            // User with same email already existed in the db
-            $response["error"] = false;
-            $response["user"] = $this->getUserByEmail($email);
-        }
-
-        return $response;
-    }
-
-    // updating user GCM registration ID
-    public function updateGcmID($user_id, $gcm_registration_id) {
-        $response = array();
-        $stmt = $this->conn->prepare("UPDATE api_andro_notif SET gcm_registration_id = ? WHERE user_id = ?");
-        $stmt->bind_param("si", $gcm_registration_id, $user_id);
-
-        if ($stmt->execute()) {
-            // User successfully updated
-            $response["error"] = false;
-            $response["message"] = 'GCM registration ID updated successfully';
-        } else {
-            // Failed to update user
-            $response["error"] = true;
-            $response["message"] = "Failed to update GCM registration ID";
-            $stmt->error;
-        }
-        $stmt->close();
-
-        return $response;
-    }
-
-    // fetching single user by id
-    public function getUser($user_id) {
-        $stmt = $this->conn->prepare("SELECT user_id, name, email, gcm_registration_id, created_at FROM users WHERE user_id = ?");
-        $stmt->bind_param("s", $user_id);
-        if ($stmt->execute()) {
-            // $user = $stmt->get_result()->fetch_assoc();
-            $stmt->bind_result($user_id, $name, $email, $gcm_registration_id, $created_at);
-            $stmt->fetch();
-            $user = array();
-            $user["user_id"] = $user_id;
-            $user["name"] = $name;
-            $user["email"] = $email;
-            $user["gcm_registration_id"] = $gcm_registration_id;
-            $user["created_at"] = $created_at;
-            $stmt->close();
-            return $user;
-        } else {
-            return NULL;
-        }
-    }
-
-    // fetching multiple users by ids
-    public function getUsers($user_ids) {
-
-        $users = array();
-        if (sizeof($user_ids) > 0) {
-            $query = "SELECT user_id, name, email, gcm_registration_id, created_at FROM users WHERE user_id IN (";
-
-            foreach ($user_ids as $user_id) {
-                $query .= $user_id . ',';
-            }
-
-            $query = substr($query, 0, strlen($query) - 1);
-            $query .= ')';
-
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            while ($user = $result->fetch_assoc()) {
-                $tmp = array();
-                $tmp["user_id"] = $user['user_id'];
-                $tmp["name"] =    $user['name'];
-                $tmp["email"] =   $user['email'];
-                $tmp["gcm_registration_id"] = $user['gcm_registration_id'];
-                $tmp["created_at"] = $user['created_at'];
-                array_push($users, $tmp);
-            }
-        }
-
-        return $users;
-    }
-
-    // messaging in a chat room / to persional message
-    public function addMessage($user_id, $chat_room_id, $message) {
-        $response = array();
-
-        $stmt = $this->conn->prepare("INSERT INTO messages (chat_room_id, user_id, message) values(?, ?, ?)");
-        $stmt->bind_param("iis", $chat_room_id, $user_id, $message);
-
-        if ($result = $stmt->execute()) {
-            $response['error'] = false;
-            // get the message
-            $message_id = $this->conn->insert_id;
-            $stmt = $this->conn->prepare("SELECT message_id, user_id, chat_room_id, message, created_at FROM messages WHERE message_id = ?");
-            $stmt->bind_param("i", $message_id);
-            if ($stmt->execute()) {
-                $stmt->bind_result($message_id, $user_id, $chat_room_id, $message, $created_at);
-                $stmt->fetch();
-                $tmp = array();
-                $tmp['message_id'] = $message_id;
-                $tmp['chat_room_id'] = $chat_room_id;
-                $tmp['message'] = $message;
-                $tmp['created_at'] = $created_at;
-                $response['message'] = $tmp;
-            }
-        } else {
-            $response['error'] = true;
-            $response['message'] = 'Failed send message ' . $stmt->error;
-        }
-
-        return $response;
-    }
-
-    // fetching all chat rooms
-    public function getAllChatrooms() {
-        $stmt = $this->conn->prepare("SELECT * FROM chat_rooms");
-        $stmt->execute();
-        $tasks = $stmt->get_result();
-        $stmt->close();
-        return $tasks;
-    }
-
-    // fetching single chat room by id
-    function getChatRoom($chat_room_id) {
-        $stmt = $this->conn->prepare("SELECT cr.chat_room_id, cr.name, cr.created_at as chat_room_created_at, u.name as username, c.* FROM chat_rooms cr LEFT JOIN messages c ON c.chat_room_id = cr.chat_room_id LEFT JOIN users u ON u.user_id = c.user_id WHERE cr.chat_room_id = ?");
-        $stmt->bind_param("i", $chat_room_id);
-        $stmt->execute();
-        $tasks = $stmt->get_result();
-        $stmt->close();
-        return $tasks;
-    }
-
-    /**
-     * Checking for duplicate user by email address
-     * @param String $email email to check in db
-     * @return boolean
-     */
-    private function isUserExists($email) {
-        $stmt = $this->conn->prepare("SELECT user_id from users WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $stmt->store_result();
-        $num_rows = $stmt->num_rows;
-        $stmt->close();
-        return $num_rows > 0;
-    }
-
-    /**
-     * Fetching user by email
-     * @param String $email User email id
-     */
-    public function getUserByEmail($email) {
-        $stmt = $this->conn->prepare("SELECT user_id, name, email, created_at FROM users WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        if ($stmt->execute()) {
-            // $user = $stmt->get_result()->fetch_assoc();
-            $stmt->bind_result($user_id, $name, $email, $created_at);
-            $stmt->fetch();
-            $user = array();
-            
-            $user["user_id"] = $user_id;
-            $user["name"] = $name;
-            $user["email"] = $email;
-            $user["created_at"] = $created_at;
-            $stmt->close();
-            return $user;
-        } else {
-            return NULL;
-        }
-    }
-
-    /**
-    *
-    * @param Sring username password
-    */
-    public function getUsernPasswd($uname,$password){       
-        $response=array();
-        $stmt =$this->conn->prepare("SELECT user_id,username,email FROM api_andro_notif WHERE  username= ? AND password= ? ");
-        $stmt->bind_param("ss",$uname,$password);
-
-        if ($stmt->execute()){
-            $stmt->bind_result($id,$name,$email);  
-            $stmt->fetch();  
-
-            $users = array();
-            $response["error"] = false;
-            $users["uid"]      = $id;
-            $users["name"]     = $name;
-            $users["mail"]     = $email;
-            $response["user"]  = $users;
-            $stmt->close();
-
-        }else{
-            $response["error"] = true;
-            $response['message'] = 'Failed To Login'. $stmt->error;
-        }
-        return $response;
-    }
-
     /**
     *
     * @param cek id and save token
@@ -272,19 +51,23 @@ class DbHandler {
         }
     }
 
+
+    
+
     /**
     * @param nip,email,Jenis_cuti,tglmulai,tgl_akhir,lamanya,alamat selama cuti,
     *        keterangan,Atasan Langsung,list persyaratan        
     */
 
-    public function createIzincuti($nip,$nama,$telp,$email,$ket,$atasan_nama,$nip_atasan,$tmulai,$takhir,$jenis_cuti,$id_user){
+    public function createIzincuti($nip,$nama,$jabatan,$pangkat,$unkerja,$telp,$email,$ket,$atasan_nama,$nip_atasan,$tmulai,$takhir,$jenis_cuti,$id_user){
     $response=array();
-    $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_usulan,kode_layanan,status,nip,nama,telp,email,waktu_usulan,ket,atas_nama,atas_nip,id_user_usul)  values (?,?,?,?,?,?,?,?,?,?,?,?) ");
+    $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_usulan,kode_layanan,status,nip,nama,jabatan,gol_pangkat,unit_kerja,telp,email,waktu_usulan,ket,atas_nama,atas_nip,id_user_usul)  values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
         $kode_usulan=$this->generateKodeUsulan();
         $kode_layanan="17";
         $waktu_usulan=date('Y-m-d H:i:s');
         $status=1;
-$stmt->bind_param("ssissssssssi",$kode_usulan,$kode_layanan,$status,$nip,$nama,$telp,$email,$waktu_usulan,$ket,$atasan_nama,$nip_atasan,$id_user);
+$stmt->bind_param("ssisssssssssssi",$kode_usulan,$kode_layanan,$status,$nip,$nama,$jabatan,
+    $pangkat,$unkerja,$telp,$email,$waktu_usulan,$ket,$atasan_nama,$nip_atasan,$id_user);
     $result = $stmt->execute();
     $stmt->close();
             // Check for successful insertion
@@ -368,7 +151,8 @@ $stmt->bind_param("ssissssssssi",$kode_usulan,$kode_layanan,$status,$nip,$nama,$
         $stmt = $this->conn->prepare("SELECT trx.kode_usulan,trx.nama,trx.waktu_usulan,ct.tmulai,ct.takhir,jc.ncuti jeniscuti,trx.atas_nama,trx.status FROM tr_transaksi trx
             JOIN tr_detail_cuti ct ON ct.kode_usulan=trx.kode_usulan
             JOIN ref_jenis_cuti jc ON jc.kcuti=ct.jenis_cuti
-            WHERE trx.nip=?");
+            WHERE trx.nip=?
+            ORDER BY trx.waktu_usulan DESC");
         $stmt->bind_param("s", $nip_pegawai);
         $stmt->execute();
         $tasks = $stmt->get_result();
@@ -409,7 +193,6 @@ $stmt->bind_param("ssissssssssi",$kode_usulan,$kode_layanan,$status,$nip,$nama,$
         $stmt->execute();
         $sisacuti = $stmt->get_result();
         $stmt->close();
-        
         return $sisacuti;
     }
 
