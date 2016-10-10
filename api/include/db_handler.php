@@ -59,7 +59,7 @@ class DbHandler {
     *        keterangan,Atasan Langsung,list persyaratan        
     */
 
-    public function createIzincuti($nip,$nama,$jabatan,$pangkat,$unkerja,$telp,$email,$ket,$atasan_nama,$nip_atasan,$tmulai,$takhir,$jenis_cuti,$id_user){
+    public function createIzincuti($nip,$nama,$jabatan,$pangkat,$unkerja,$telp,$email,$ket,$atasan_nama,$nip_atasan,$tmulai,$takhir,$jenis_cuti,$id_user,$jabatan_atasan,$alamatcuti){
     $response=array();
     $stmt = $this->conn->prepare("INSERT INTO tr_transaksi (kode_usulan,kode_layanan,status,nip,nama,jabatan,gol_pangkat,unit_kerja,telp,email,waktu_usulan,ket,atas_nama,atas_nip,id_user_usul)  values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
         $kode_usulan=$this->generateKodeUsulan();
@@ -78,11 +78,11 @@ $stmt->bind_param("ssisssssssssssi",$kode_usulan,$kode_layanan,$status,$nip,$nam
       $tahun_usulan=date('Y');
       $jum_hari=1;
       $sisacuti=2;
-      $alamat="ss";
-
+      $alamat=$alamatcuti;
+      //kdsop
       $stmts->bind_param("sisiiissssssss",$kode_usulan,$tahun_usulan,$nip,$jenis_cuti,
                 $jum_hari,$sisacuti,$tmulai,$takhir,$ket,$alamat,$waktu_usulan,
-                $nip_atasan,$nama_atasan,$jabatan_atasan);
+                $nip_atasan,$atasan_nama,$jabatan_atasan);
       $result = $stmts->execute();
       $stmts->close();
                 $response["status"]  = true;

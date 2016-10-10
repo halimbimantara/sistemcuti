@@ -68,6 +68,13 @@ $app->get('/nipatasan', function() use ($app){
     echoRespnse(200, $result);
 });
 
+// $app->get('/nipatasan', function() use ($app){
+//      global $app;
+//     $db = new DbHandlerSimpeg();
+//     $result   = $db->getNipAtasan();
+//     echoRespnse(200, $result);
+// });
+
 /**
 *
 */
@@ -91,13 +98,13 @@ $app->post('/createcuti', function() use ($app) {
     $tmulai         = $app->request->post('tmulai');
     $takhir         = $app->request->post('takhir');
     $jeniscuti      = $app->request->post('jcuti');
+    $alamatcuti     = $app->request->post('alamatcuti');
     
     $db = new DbHandler();
-    $response = $db->createIzincuti($nip,$nama,$jbtan,$pangkat,$unitkerja,$telp,$email,$keterangan,$atasan_nama,$nip_atasan,$tmulai,$takhir,$jeniscuti,$id_user);
+    $response = $db->createIzincuti($nip,$nama,$jbtan,$pangkat,$unitkerja,$telp,$email,$keterangan,$atasan_nama,$nip_atasan,$tmulai,$takhir,$jeniscuti,$id_user,$jabatan_atasan,$alamatcuti);
     // echo json response
     echoRespnse(200, $response); 
 });    
-
 
 
 /**
